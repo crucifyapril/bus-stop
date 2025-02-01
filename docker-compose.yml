@@ -1,0 +1,52 @@
+services:
+  nginx-task:
+    container_name: nginx-task
+    image: nginx:1.24
+    restart: no
+    volumes:
+      - .:/var/www/
+      - ./.docker/config/nginx/:/etc/nginx/conf.d/
+      - ./.docker/logs/nginx:/var/log/nginx/
+    ports:
+      - "80:80"
+    networks:
+      - web-network-task
+
+  php-task:
+    image: ${IMAGE}:${VERSION}
+    build:
+      context: ./.docker/
+    container_name: php-task
+    restart: no
+    working_dir: /var/www
+    volumes:
+      - .:/var/www/
+    networks:
+      - web-network-task
+
+  db-task:
+    container_name: db-task
+    image: postgres:17.2
+    restart: no
+    ports:
+      - "3317:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: local
+      MYSQL_DATABASE: task
+      MYSQL_USER: task
+      MYSQL_PASSWORD: task
+    security_opt:
+      - seccomp:unconfined
+    volumes:
+      - database-task-v1:/var/lib/mysql
+    networks:
+      - web-network-task
+
+volumes:
+    database-task-v1:
+        name: database-task-v1
+
+networks:
+  web-network-task:
+    name: web-network-task
+    driver: bridge
