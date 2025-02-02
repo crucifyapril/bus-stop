@@ -29,22 +29,21 @@ services:
     image: postgres:17.2
     restart: no
     ports:
-      - "3317:3306"
+      - "5433:5432"
     environment:
-      MYSQL_ROOT_PASSWORD: local
-      MYSQL_DATABASE: task
-      MYSQL_USER: task
-      MYSQL_PASSWORD: task
+        POSTGRES_DB: task
+        POSTGRES_USER: task
+        POSTGRES_PASSWORD: task
     security_opt:
       - seccomp:unconfined
     volumes:
-      - database-task-v1:/var/lib/mysql
+      - database-task-bus:/var/lib/postgresql/data
     networks:
       - web-network-task
 
 volumes:
-    database-task-v1:
-        name: database-task-v1
+    database-task-bus:
+        name: database-task-bus
 
 networks:
   web-network-task:
