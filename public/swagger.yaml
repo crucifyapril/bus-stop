@@ -1,0 +1,335 @@
+openapi: 3.0.1
+info:
+  title: API для автобусных маршрутов
+  description: Документация API для работы с автобусными маршрутами, автобусами и остановками.
+  version: 1.0.0
+servers:
+  - url: 'http://localhost/api'
+    description: Локальная среда разработки
+
+paths:
+  /routes:
+    get:
+      summary: Получить все маршруты
+      operationId: getRoutes
+      tags:
+        - Routes
+      responses:
+        '200':
+          description: Успешный запрос
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  current_page:
+                    type: integer
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Route'
+        '500':
+          description: Ошибка сервера
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  message:
+                    type: string
+
+    post:
+      summary: Создать маршрут
+      description: Создает новый маршрут с автобусами и временем прибытия на остановки.
+      operationId: createRoute
+      tags:
+        - Routes
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - direction
+                - stops
+                - buses
+              properties:
+                name:
+                  type: string
+                  description: Название маршрута
+                  example: "Маршрут 101"
+                direction:
+                  type: string
+                  description: Направление маршрута
+                  enum:
+                    - forward
+                    - backward
+                  example: "forward"
+                stops:
+                  type: array
+                  description: Список остановок маршрута
+                  items:
+                    type: integer
+                    example: 1
+                buses:
+                  type: array
+                  description: Список автобусов, работающих на маршруте
+                  items:
+                    type: object
+                    required:
+                      - name
+                      - arrival_times
+                    properties:
+                      name:
+                        type: string
+                        description: Название автобуса
+                        example: "Автобус 1"
+                      arrival_times:
+                        type: object
+                        description: Время прибытия автобуса на остановки
+                        additionalProperties:
+                          type: string
+                          example: "08:00"
+              example:
+                name: "Маршрут 101"
+                direction: "forward"
+                stops:
+                  - 1
+                  - 2
+                  - 3
+                buses:
+                  - name: "Автобус 1"
+                    arrival_times:
+                      "1": "08:00"
+                      "2": "08:15"
+                      "3": "08:30"
+                  - name: "Автобус 2"
+                    arrival_times:
+                      "1": "09:00"
+                      "2": "09:15"
+                      "3": "09:30"
+      responses:
+        '201':
+          description: Маршрут успешно создан
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Route'
+        '409':
+          description: Конфликт данных (маршрут с таким именем и направлением уже существует)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  message:
+                    type: string
+
+  /routes/{id}:
+    get:
+      summary: Получить маршрут по ID
+      operationId: getRoute
+      tags:
+        - Routes
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Успешный запрос
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Route'
+        '404':
+          description: Маршрут не найден
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  message:
+                    type: string
+
+    put:
+      summary: Обновить маршрут
+      operationId: updateRoute
+      tags:
+        - Routes
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RouteRequest'
+      responses:
+        '200':
+          description: Маршрут обновлен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Route'
+        '404':
+          description: Маршрут не найден
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  message:
+                    type: string
+
+    delete:
+      summary: Удалить маршрут
+      operationId: deleteRoute
+      tags:
+        - Routes
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Маршрут успешно удален
+        '404':
+          description: Маршрут не найден
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  message:
+                    type: string
+
+  /find-bus:
+    get:
+      summary: Найти автобусы между остановками
+      operationId: findBuses
+      tags:
+        - Buses
+      parameters:
+        - name: fromId
+          in: query
+          required: true
+          schema:
+            type: integer
+        - name: toId
+          in: query
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Список автобусов с временем прибытия
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  from:
+                    type: string
+                  to:
+                    type: string
+                  buses:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        route:
+                          type: string
+                        next_arrivals:
+                          type: array
+                          items:
+                            type: string
+                            format: time
+        '400':
+          description: Неверный запрос
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  message:
+                    type: string
+
+components:
+  schemas:
+    Route:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        direction:
+          type: string
+          enum:
+            - forward
+            - backward
+        stops:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+              name:
+                type: string
+
+    RouteRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        direction:
+          type: string
+          enum:
+            - forward
+            - backward
+        stops:
+          type: array
+          items:
+            type: integer
+
+    Bus:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        route_id:
+          type: integer
+
+    Stop:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
