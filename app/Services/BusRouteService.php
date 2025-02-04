@@ -31,7 +31,6 @@ class BusRouteService
         DB::beginTransaction();
 
         try {
-            // Проверяем существование маршрута с таким же направлением
             $existingRoute = Route::query()->where('name', $data['name'])
                 ->where('direction', $data['direction'])
                 ->first();
@@ -40,20 +39,17 @@ class BusRouteService
                 throw new Exception('Маршрут с таким направлением уже существует.');
             }
 
-            // Создаем маршрут
             $route = Route::query()->create([
                 'name' => $data['name'],
                 'direction' => $data['direction']
             ]);
 
-            // Добавляем остановки
             if (!empty($data['stops'])) {
                 foreach ($data['stops'] as $index => $stopId) {
                     $route->stops()->attach($stopId, ['position_in_route' => $index + 1]);
                 }
             }
 
-            // Добавляем автобусы и их расписание
             if (!empty($data['buses'])) {
                 foreach ($data['buses'] as $busData) {
                     $bus = Bus::query()->create([
@@ -131,20 +127,18 @@ class BusRouteService
     /**
      * @throws Exception
      */
-    public function deleteRoute(int $id)
+    public function deleteRoute(int $id): string
     {
         DB::beginTransaction();
 
         try {
             $route = Route::query()->findOrFail($id);
 
-            // Удаляем все автобусы, связанные с маршрутом
             foreach ($route->buses as $bus) {
                 ArrivalTime::query()->where('bus_id', $bus->id)->delete();
                 $bus->delete();
             }
 
-            // Удаляем маршрут и его связи
             $route->stops()->detach();
             $route->delete();
 
