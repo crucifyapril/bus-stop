@@ -14,16 +14,16 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         DB::transaction(function () {
-            $stopPushkina = Stop::firstOrCreate(['name' => 'ул. Пушкина']);
-            $stopLenina = Stop::firstOrCreate(['name' => 'ул. Ленина']);
-            $stopPopova = Stop::firstOrCreate(['name' => 'ост. Попова']);
+            $stopPushkina = Stop::query()->firstOrCreate(['name' => 'ул. Пушкина']);
+            $stopLenina = Stop::query()->firstOrCreate(['name' => 'ул. Ленина']);
+            $stopPopova = Stop::query()->firstOrCreate(['name' => 'ост. Попова']);
 
-            $route11 = Route::firstOrCreate([
+            $route11 = Route::query()->firstOrCreate([
                 'name' => 'Автобус №11',
                 'direction' => 'forward',
             ]);
 
-            $route21 = Route::firstOrCreate([
+            $route21 = Route::query()->firstOrCreate([
                 'name' => 'Автобус №21',
                 'direction' => 'forward',
             ]);
@@ -38,12 +38,12 @@ class DatabaseSeeder extends Seeder
                 $stopLenina->id => ['position_in_route' => 2],
             ]);
 
-            $bus11 = Bus::firstOrCreate([
+            $bus11 = Bus::query()->firstOrCreate([
                 'name' => 'Автобус №11',
                 'route_id' => $route11->id,
             ]);
 
-            $bus21 = Bus::firstOrCreate([
+            $bus21 = Bus::query()->firstOrCreate([
                 'name' => 'Автобус №21',
                 'route_id' => $route21->id,
             ]);
@@ -59,7 +59,7 @@ class DatabaseSeeder extends Seeder
             ];
 
             foreach ($arrivalTimes as $time) {
-                ArrivalTime::firstOrCreate($time);
+                ArrivalTime::query()->firstOrCreate($time);
             }
         });
     }
