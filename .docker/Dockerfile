@@ -30,6 +30,10 @@ RUN pecl install redis
 RUN docker-php-ext-install exif opcache zip pdo pdo_mysql mysqli
 RUN docker-php-ext-enable opcache zip redis exif
 
+RUN apt-get update && apt-get install -y libpq-dev \
+    && docker-php-ext-install pdo pdo_pgsql \
+    && docker-php-ext-enable pdo_pgsql
+
 RUN docker-php-source delete
 RUN apt-get autoremove --purge -y && apt-get autoclean -y && apt-get clean -y
 
